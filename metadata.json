@@ -1,0 +1,6 @@
+{
+  "name": "Tldraw Canvas",
+  "description": "An infinite canvas whiteboard powered by the Tldraw SDK with collaborative-grade drawing tools, templates, and export features.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
