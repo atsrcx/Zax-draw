@@ -1,4 +1,4 @@
-# ðŸŽ¨ Tldraw Canvas â€” Infinite Whiteboard & Diagram Studio (PWA)
+# 🎨 Tldraw Canvas — Infinite Whiteboard & Diagram Studio (PWA)
 
 [![React](https://img.shields.io/badge/React-19.0-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -12,32 +12,32 @@ An infinite whiteboard and diagramming web application built with **React 19**, 
 
 ---
 
-## ðŸŒŸ Key Features
+## 🌟 Key Features
 
-- â™¾ï¸ **Infinite Canvas Whiteboard**: Boundless workspace with sub-pixel precision pan, zoom, grid alignment, and snap-to-geometry powered by `@tldraw/tldraw`.
-- ðŸ› ï¸ **Complete Drawing Suite**:
+- ♾️ **Infinite Canvas Whiteboard**: Boundless workspace with sub-pixel precision pan, zoom, grid alignment, and snap-to-geometry powered by `@tldraw/tldraw`.
+- 🛠️ **Complete Drawing Suite**:
   - **Selection & Navigation**: Select pointer, Hand pan tool, Laser pointer, and Zoom controls.
   - **Drawing & Ink**: Freehand pen/pencil with dynamic pressure sensitivity and highlighter.
   - **Shapes**: Rectangles, Ellipses, Triangles, Diamonds, Stars, Arrows, and Lines with customizable fills, stroke styles, and color palettes.
   - **Annotation**: Rich text labels, sticky notes, and container frames.
   - **Media**: Local image and vector asset insertion.
-- ðŸ“ **Pre-built Template Library**:
-  - ðŸ”„ **Process Flowchart**: Decision trees with start/end terminals, action cards, condition diamonds, and connecting arrows.
-  - ðŸ“‹ **Sprint Kanban Board**: Multi-column board (To Do, In Progress, Done) pre-populated with task sticky notes.
-  - â˜ï¸ **Cloud Architecture Diagram**: Microservices layout featuring API Gateway, client tier, app services, database, and Redis cache.
-  - ðŸ§  **Mind Map / Brainstorming**: Central strategy hub with radiating concept branches and design annotations.
-  - ðŸ“± **Mobile UI Wireframe**: Mobile device frame with header, hero banner, content cards, and action buttons.
-- ðŸ’¾ **Export & Import Engine**:
+- 📐 **Pre-built Template Library**:
+  - 🔄 **Process Flowchart**: Decision trees with start/end terminals, action cards, condition diamonds, and connecting arrows.
+  - 📋 **Sprint Kanban Board**: Multi-column board (To Do, In Progress, Done) pre-populated with task sticky notes.
+  - ☁️ **Cloud Architecture Diagram**: Microservices layout featuring API Gateway, client tier, app services, database, and Redis cache.
+  - 🧠 **Mind Map / Brainstorming**: Central strategy hub with radiating concept branches and design annotations.
+  - 📱 **Mobile UI Wireframe**: Mobile device frame with header, hero banner, content cards, and action buttons.
+- 💾 **Export & Import Engine**:
   - **Export as PNG**: High-resolution bitmap snapshot of selected shapes or the entire canvas.
   - **Export as SVG**: Scalable vector format ideal for documentation and presentations.
   - **Export as JSON / .tldr**: Full snapshot backup of board state and shapes.
   - **Import / Restore**: One-click file picker supporting `.tldr` and `.json` restoration.
-- ðŸ“± **Full PWA & Offline Support**:
+- 📱 **Full PWA & Offline Support**:
   - **Installable**: One-click installation on Desktop (Chrome, Edge, Brave) and Mobile (Android, iOS).
   - **Offline First**: Service Worker precaches all application bundles, assets, and Google Web Fonts.
   - **Standalone Display**: Launches in a native borderless window without URL bar distractions.
   - **Status Awareness**: Real-time network detection with a discreet offline indicator banner.
-- âš¡ **High-Density Engineering UI**:
+- ⚡ **High-Density Engineering UI**:
   - Compact 48px header with inline project renaming and auto-save indicators.
   - Live bottom status bar tracking shape count, selection count, zoom level, and live connectivity.
   - Zen mode (full-screen drawing mode) with minimal floating telemetry.
@@ -45,7 +45,7 @@ An infinite whiteboard and diagramming web application built with **React 19**, 
 
 ---
 
-## ðŸš€ Quick Start (Local Setup)
+## 🚀 Quick Start (Local Setup)
 
 ### Prerequisites
 
@@ -89,46 +89,46 @@ An infinite whiteboard and diagramming web application built with **React 19**, 
 
 ---
 
-## ðŸ“‚ Project Structure
+## 📂 Project Structure
 
 ```
-â”œâ”€â”€ public/                     # Static assets & PWA manifest icons
-â”‚   â”œâ”€â”€ favicon.ico             # App favicon
-â”‚   â”œâ”€â”€ icon.svg                # Vector app logo
-â”‚   â”œâ”€â”€ apple-touch-icon.png    # iOS Safari home screen icon (180x180)
-â”‚   â”œâ”€â”€ pwa-192x192.png         # Standard Android / Chrome icon
-â”‚   â”œâ”€â”€ pwa-512x512.png         # High-resolution splash icon
-â”‚   â””â”€â”€ pwa-maskable-512x512.png# Maskable icon (safe-zone padded)
-â”œâ”€â”€ scripts/
-â”‚   â””â”€â”€ generate-icons.js       # Node.js script generating PWA icon assets via Sharp
-â”œâ”€â”€ src/
-â”‚   â”œâ”€â”€ components/             # Reusable UI components
-â”‚   â”‚   â”œâ”€â”€ CanvasStats.tsx     # Floating canvas metrics pill (Zen mode)
-â”‚   â”‚   â”œâ”€â”€ ClearConfirmModal.tsx # Safe board reset dialog with undo warning
-â”‚   â”‚   â”œâ”€â”€ Header.tsx          # High-density header with templates, tools & export
-â”‚   â”‚   â”œâ”€â”€ OfflineIndicator.tsx# Live offline status toast
-â”‚   â”‚   â”œâ”€â”€ PWAInstallButton.tsx# Multi-platform PWA install prompt & guide modal
-â”‚   â”‚   â”œâ”€â”€ ShortcutsModal.tsx  # Keyboard shortcuts reference dialog
-â”‚   â”‚   â””â”€â”€ Toast.tsx           # Floating feedback notification system
-â”‚   â”œâ”€â”€ hooks/                  # Custom React hooks
-â”‚   â”‚   â”œâ”€â”€ useOnlineStatus.ts  # Browser online/offline event listener
-â”‚   â”‚   â””â”€â”€ usePWAInstall.ts    # beforeinstallprompt & standalone detection
-â”‚   â”œâ”€â”€ templates/
-â”‚   â”‚   â””â”€â”€ canvasTemplates.ts  # Pre-built board blueprints (Flowcharts, Kanban, etc.)
-â”‚   â”œâ”€â”€ App.tsx                 # Main application layout & Tldraw integration
-â”‚   â”œâ”€â”€ main.tsx                # React root & PWA Service Worker registration
-â”‚   â”œâ”€â”€ types.ts                # TypeScript interfaces & definitions
-â”‚   â””â”€â”€ index.css               # Tailwind CSS v4 styling entry point
-â”œâ”€â”€ index.html                  # HTML5 entry point with PWA meta tags
-â”œâ”€â”€ metadata.json               # Platform configuration metadata
-â”œâ”€â”€ package.json                # Project dependencies & build scripts
-â”œâ”€â”€ tsconfig.json               # TypeScript configuration
-â””â”€â”€ vite.config.ts              # Vite configuration with Tailwind & VitePWA plugins
+├── public/                     # Static assets & PWA manifest icons
+│   ├── favicon.ico             # App favicon
+│   ├── icon.svg                # Vector app logo
+│   ├── apple-touch-icon.png    # iOS Safari home screen icon (180x180)
+│   ├── pwa-192x192.png         # Standard Android / Chrome icon
+│   ├── pwa-512x512.png         # High-resolution splash icon
+│   └── pwa-maskable-512x512.png# Maskable icon (safe-zone padded)
+├── scripts/
+│   └── generate-icons.js       # Node.js script generating PWA icon assets via Sharp
+├── src/
+│   ├── components/             # Reusable UI components
+│   │   ├── CanvasStats.tsx     # Floating canvas metrics pill (Zen mode)
+│   │   ├── ClearConfirmModal.tsx # Safe board reset dialog with undo warning
+│   │   ├── Header.tsx          # High-density header with templates, tools & export
+│   │   ├── OfflineIndicator.tsx# Live offline status toast
+│   │   ├── PWAInstallButton.tsx# Multi-platform PWA install prompt & guide modal
+│   │   ├── ShortcutsModal.tsx  # Keyboard shortcuts reference dialog
+│   │   └── Toast.tsx           # Floating feedback notification system
+│   ├── hooks/                  # Custom React hooks
+│   │   ├── useOnlineStatus.ts  # Browser online/offline event listener
+│   │   └── usePWAInstall.ts    # beforeinstallprompt & standalone detection
+│   ├── templates/
+│   │   └── canvasTemplates.ts  # Pre-built board blueprints (Flowcharts, Kanban, etc.)
+│   ├── App.tsx                 # Main application layout & Tldraw integration
+│   ├── main.tsx                # React root & PWA Service Worker registration
+│   ├── types.ts                # TypeScript interfaces & definitions
+│   └── index.css               # Tailwind CSS v4 styling entry point
+├── index.html                  # HTML5 entry point with PWA meta tags
+├── metadata.json               # Platform configuration metadata
+├── package.json                # Project dependencies & build scripts
+├── tsconfig.json               # TypeScript configuration
+└── vite.config.ts              # Vite configuration with Tailwind & VitePWA plugins
 ```
 
 ---
 
-## ðŸ› ï¸ Tech Stack
+## 🛠️ Tech Stack
 
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
@@ -144,7 +144,7 @@ An infinite whiteboard and diagramming web application built with **React 19**, 
 
 ---
 
-## ðŸ“± Progressive Web App (PWA) Guide
+## 📱 Progressive Web App (PWA) Guide
 
 This project is configured as a fully compliant **Progressive Web App**:
 
@@ -154,7 +154,7 @@ This project is configured as a fully compliant **Progressive Web App**:
   1. Click the green **Install App** button in the header bar, or click the install icon located inside the browser URL address bar.
   2. Confirm the installation prompt. The app will launch in a dedicated desktop window.
 - **Android (Chrome)**:
-  1. Tap the **Install App** button or open the Chrome menu (â‹®) and tap **Add to Home screen** / **Install app**.
+  1. Tap the **Install App** button or open the Chrome menu (⋮) and tap **Add to Home screen** / **Install app**.
 - **iPhone / iPad (Safari)**:
   1. Tap the **Share** button in Safari's bottom toolbar.
   2. Scroll down and choose **Add to Home Screen**.
@@ -167,7 +167,7 @@ This project is configured as a fully compliant **Progressive Web App**:
 
 ---
 
-## âŒ¨ï¸ Keyboard Shortcuts Reference
+## ⌨️ Keyboard Shortcuts Reference
 
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
@@ -183,16 +183,16 @@ This project is configured as a fully compliant **Progressive Web App**:
 | `N` / `0` | **Sticky Note** | Create colored sticky notes |
 | `F` | **Frame** | Create structural frame containers |
 | `Space + Drag` | **Temporary Pan** | Pan the canvas while holding Spacebar |
-| `âŒ˜ / Ctrl + Z` | **Undo** | Undo last canvas operation |
-| `âŒ˜ / Ctrl + â‡§ + Z` | **Redo** | Redo previous operation |
-| `âŒ˜ / Ctrl + A` | **Select All** | Select every shape on the board |
-| `âŒ˜ / Ctrl + 0` | **Zoom to Fit** | Center and fit all shapes to screen |
-| `âŒ˜ / Ctrl + 1` | **Zoom to 100%** | Reset zoom level to 100% default |
+| `⌘ / Ctrl + Z` | **Undo** | Undo last canvas operation |
+| `⌘ / Ctrl + ⇧ + Z` | **Redo** | Redo previous operation |
+| `⌘ / Ctrl + A` | **Select All** | Select every shape on the board |
+| `⌘ / Ctrl + 0` | **Zoom to Fit** | Center and fit all shapes to screen |
+| `⌘ / Ctrl + 1` | **Zoom to 100%** | Reset zoom level to 100% default |
 | `Backspace / Del` | **Delete** | Remove selected shapes |
 
 ---
 
-## ðŸš¢ Deployment
+## 🚢 Deployment
 
 ### Deploy to Vercel
 
@@ -231,7 +231,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 ---
 
-## ðŸ¤ Contributing
+## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome!
 
@@ -243,6 +243,6 @@ Contributions, issues, and feature requests are welcome!
 
 ---
 
-## ðŸ“„ License
+## 📄 License
 
 This project is distributed under the **MIT License**. See `LICENSE` for more information.

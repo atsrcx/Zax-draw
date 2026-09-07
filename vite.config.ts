@@ -1,16 +1,45 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import {defineConfig, Plugin} from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+// Wrap @tailwindcss/vite to safely guard against hotUpdate crashes when HMR/WebSockets are disabled
+function safeTailwindcss(): Plugin[] {
+  const plugins = tailwindcss();
+  return plugins.map((plugin) => {
+    if (plugin.name === '@tailwindcss/vite:generate:serve' && plugin.hotUpdate) {
+      const originalHotUpdate = plugin.hotUpdate;
+      return {
+        ...plugin,
+        hotUpdate(ctx: any) {
+          // Prevent "[vite] Cannot read properties of undefined (reading 'send')" when server.hot or server.ws is undefined
+          if (
+            process.env.DISABLE_HMR === 'true' ||
+            !ctx.server?.hot ||
+            !ctx.server?.ws
+          ) {
+            return [];
+          }
+          try {
+            return (originalHotUpdate as any).call(this, ctx);
+          } catch {
+            return [];
+          }
+        },
+      };
+    }
+    return plugin;
+  });
+}
 
 export default defineConfig(() => {
   return {
     plugins: [
       react(),
-      tailwindcss(),
+      safeTailwindcss(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
           id: '/',
@@ -44,8 +73,28 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
+          cleanupOutdatedCaches: true,
+          clientsClaim: false,
+          skipWaiting: false,
+          navigateFallback: '/index.html',
+          navigateFallbackDenylist: [/^\/api\/.*/],
+          maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
           runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/cdn\.tldraw\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'tldraw-cdn-cache',
+                expiration: {
+                  maxEntries: 120,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
               handler: 'CacheFirst',
@@ -77,8 +126,7 @@ export default defineConfig(() => {
           ],
         },
         devOptions: {
-          enabled: true,
-          type: 'module',
+          enabled: false,
         },
       }),
     ],
