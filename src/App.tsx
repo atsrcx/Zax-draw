@@ -183,25 +183,27 @@ export default function App() {
   return (
     <div
       id="zaxdraw-app-root"
-      className="relative w-screen h-screen overflow-hidden bg-[#f8f9fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100"
+      className="flex flex-col w-full h-screen h-[100dvh] min-h-0 overflow-hidden bg-[#f8f9fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 select-none"
     >
       {/* Top Application Header */}
-      <Header
-        editor={editor}
-        boardTitle={boardTitle}
-        onTitleChange={handleTitleChange}
-        isZenMode={isZenMode}
-        onToggleZenMode={() => setIsZenMode((prev) => !prev)}
-        onOpenShortcuts={() => setIsShortcutsOpen(true)}
-        onOpenClearModal={() => setIsClearModalOpen(true)}
-        addToast={addToast}
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={handleToggleDarkMode}
-        isGridMode={isGridMode}
-        onToggleGridMode={handleToggleGridMode}
-        isSnapMode={isSnapMode}
-        onToggleSnapMode={handleToggleSnapMode}
-      />
+      {!isZenMode && (
+        <Header
+          editor={editor}
+          boardTitle={boardTitle}
+          onTitleChange={handleTitleChange}
+          isZenMode={isZenMode}
+          onToggleZenMode={() => setIsZenMode((prev) => !prev)}
+          onOpenShortcuts={() => setIsShortcutsOpen(true)}
+          onOpenClearModal={() => setIsClearModalOpen(true)}
+          addToast={addToast}
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={handleToggleDarkMode}
+          isGridMode={isGridMode}
+          onToggleGridMode={handleToggleGridMode}
+          isSnapMode={isSnapMode}
+          onToggleSnapMode={handleToggleSnapMode}
+        />
+      )}
 
       {/* Zen Mode Floating Exit Button */}
       {isZenMode && (
@@ -216,21 +218,19 @@ export default function App() {
         </button>
       )}
 
-      {/* Main Canvas Container */}
-      <div
+      {/* Main Canvas Area */}
+      <main
         id="zaxdraw-canvas-wrapper"
-        className={`absolute inset-x-0 ${
-          isZenMode ? 'top-0 bottom-0' : 'top-12 bottom-0 sm:bottom-6'
-        }`}
+        className="flex-1 relative w-full h-full min-h-0 overflow-hidden"
       >
         <CanvasBoard onMount={handleMount} />
-      </div>
+      </main>
 
-      {/* High Density Status Bar */}
+      {/* Status Bar / Zen Stats */}
       {!isZenMode ? (
         <footer
           id="app-status-bar"
-          className="hidden sm:flex fixed bottom-0 left-0 right-0 h-6 bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-300 border-t border-slate-700 dark:border-slate-800 items-center px-3 justify-between text-[10px] font-mono select-none z-30 tracking-tight"
+          className="hidden sm:flex shrink-0 h-6 w-full bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-300 border-t border-slate-700 dark:border-slate-800 items-center px-3 justify-between text-[10px] font-mono select-none z-30 tracking-tight"
         >
           <div className="flex items-center gap-3">
             <span className="opacity-70">Status:</span>

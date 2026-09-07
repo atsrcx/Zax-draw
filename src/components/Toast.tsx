@@ -21,7 +21,7 @@ export const Toast: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
   return (
     <div
       id="toast-container"
-      className="fixed bottom-8 right-4 z-50 flex flex-col gap-1.5 pointer-events-none max-w-sm w-full"
+      className="fixed bottom-8 sm:bottom-10 right-3 sm:right-4 z-50 flex flex-col gap-1.5 pointer-events-none max-w-[calc(100vw-1.5rem)] sm:max-w-sm w-full"
     >
       {toasts.map((toast) => (
         <div

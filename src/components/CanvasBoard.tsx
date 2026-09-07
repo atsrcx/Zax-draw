@@ -58,8 +58,23 @@ export const CanvasBoard: React.FC<CanvasBoardProps> = memo(({ onMount }) => {
 
     initEditor();
 
+    // ResizeObserver to ensure BlockSuite responds smoothly to dynamic container resizing
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        if (editorRef.current) {
+          // Trigger smooth container reflow
+          window.dispatchEvent(new Event('resize'));
+        }
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+
     return () => {
       isCancelled = true;
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       if (editorRef.current && editorRef.current.parentElement) {
         editorRef.current.parentElement.removeChild(editorRef.current);
         editorRef.current = null;
@@ -76,7 +91,7 @@ export const CanvasBoard: React.FC<CanvasBoardProps> = memo(({ onMount }) => {
       <div
         id="zax-draw-canvas-container"
         ref={containerRef}
-        className="relative w-full h-full overflow-hidden select-none bg-[#f8f9fa] dark:bg-slate-950"
+        className="relative w-full h-full overflow-hidden select-none bg-[#f8f9fa] dark:bg-slate-950 touch-pan-x touch-pan-y"
       >
         {isLoading && (
           <div
@@ -95,3 +110,4 @@ export const CanvasBoard: React.FC<CanvasBoardProps> = memo(({ onMount }) => {
 });
 
 CanvasBoard.displayName = 'CanvasBoard';
+
