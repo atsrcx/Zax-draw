@@ -297,25 +297,25 @@ export default function App() {
       {!isZenMode ? (
         <footer
           id="app-status-bar"
-          className="hidden sm:flex shrink-0 h-6 w-full bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-300 border-t border-slate-700 dark:border-slate-800 items-center px-3 justify-between text-[10px] font-mono select-none z-30 tracking-tight"
+          className="hidden sm:flex shrink-0 h-6 w-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-t border-slate-200 dark:border-slate-800 items-center px-3 justify-between text-[10px] font-mono select-none z-30 tracking-tight transition-colors"
         >
           <div className="flex items-center gap-3">
             <span className="opacity-70">Status:</span>
             {isOnline ? (
-              <span className="flex items-center gap-1 text-emerald-400">
+              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                 Live (Connected)
               </span>
             ) : (
-              <span className="flex items-center gap-1 text-amber-400 font-semibold">
-                <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
+                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
                 Offline (Cached)
               </span>
             )}
             <span className="opacity-40 hidden sm:inline">•</span>
             <span className="opacity-80 hidden sm:inline">Shapes: {shapeCount}</span>
             {selectedCount > 0 && (
-              <span className="text-blue-400 font-semibold">({selectedCount} selected)</span>
+              <span className="text-blue-600 dark:text-blue-400 font-semibold">({selectedCount} selected)</span>
             )}
           </div>
 
@@ -324,7 +324,7 @@ export default function App() {
             <span className="opacity-40 hidden sm:inline">•</span>
             <span className="opacity-70 hidden md:inline">Auto-saved (IndexedDB)</span>
             <span className="opacity-40 hidden lg:inline">•</span>
-            <span className="text-emerald-400 hidden lg:inline">BlockSuite Engine</span>
+            <span className="text-emerald-600 dark:text-emerald-400 hidden lg:inline">BlockSuite Engine</span>
             <span>Shortcut: ⌘Z (Undo)</span>
           </div>
         </footer>

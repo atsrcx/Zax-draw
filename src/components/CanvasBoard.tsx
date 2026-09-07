@@ -20,6 +20,71 @@ export const CanvasBoard: React.FC<CanvasBoardProps> = memo(({ onMount }) => {
   const editorRef = useRef<EdgelessEditor | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Focus and virtual keyboard controller: Prevent virtual keyboard from opening on canvas/diagram clicks
+  useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      // Allow keyboard only for explicit input fields (e.g., header title, search, modal inputs)
+      const isExplicitInput =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.id === 'board-title-input' ||
+        Boolean(target.closest('header')) ||
+        Boolean(target.closest('[role="dialog"]')) ||
+        Boolean(target.closest('.modal-container'));
+
+      if (isExplicitInput) {
+        return;
+      }
+
+      // If focus happens on a canvas element, check if it is actively in text editing mode
+      const isActivelyEditingText =
+        target.classList?.contains('inline-editor') ||
+        target.classList?.contains('affine-paragraph') ||
+        target.getAttribute('contenteditable') === 'true';
+
+      // If user tapped a diagram, shape, or canvas background, do not open mobile virtual keyboard
+      if (!isActivelyEditingText) {
+        target.setAttribute('inputmode', 'none');
+        target.setAttribute('virtualkeyboardpolicy', 'manual');
+      } else {
+        // If it is an intentional text block, check if it was explicitly activated
+        if (!target.dataset?.editing && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          target.setAttribute('inputmode', 'none');
+        }
+      }
+    };
+
+    // Close any lingering keyboard when clicking on non-input canvas areas
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const isInput =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        Boolean(target.closest('header')) ||
+        Boolean(target.closest('[role="dialog"]'));
+
+      if (!isInput) {
+        const active = document.activeElement as HTMLElement | null;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+          active.blur();
+        }
+      }
+    };
+
+    document.addEventListener('focusin', handleFocusIn, { capture: true });
+    document.addEventListener('pointerdown', handlePointerDown, { passive: true });
+
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn, { capture: true });
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, []);
+
   useEffect(() => {
     let isCancelled = false;
 
