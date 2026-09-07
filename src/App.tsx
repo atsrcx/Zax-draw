@@ -9,11 +9,12 @@ import { ClearConfirmModal } from './components/ClearConfirmModal';
 import { Toast } from './components/Toast';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
-import { ToastMessage, ZaxDrawEditor } from './types';
+import { CanvasToolType, ToastMessage, ZaxDrawEditor } from './types';
 import { safeStorageGet, safeStorageSet } from './utils/storage';
 
 export default function App() {
   const [editor, setEditor] = useState<ZaxDrawEditor | null>(null);
+  const [activeTool, setActiveTool] = useState<CanvasToolType>('select');
   const [boardTitle, setBoardTitle] = useState(() => {
     return safeStorageGet('zaxdraw_board_title', 'Infinite Whiteboard');
   });
@@ -45,6 +46,16 @@ export default function App() {
     setEditor(inst);
   }, []);
 
+  const handleToolChange = useCallback(
+    (tool: CanvasToolType, options?: any) => {
+      setActiveTool(tool);
+      if (editor?.setTool) {
+        editor.setTool(tool, options);
+      }
+    },
+    [editor]
+  );
+
   const addToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
     const id = Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
     setToasts((prev) => [...prev.slice(-3), { ...toast, id }]);
@@ -63,6 +74,62 @@ export default function App() {
       type: 'info',
     });
   };
+
+  // Keyboard shortcut listener for active tool selection
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        target.closest('[contenteditable="true"]')
+      ) {
+        return;
+      }
+
+      if (e.metaKey || e.ctrlKey) {
+        if (e.key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          editor?.undo();
+        } else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
+          e.preventDefault();
+          editor?.redo();
+        }
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      if (key === 'v' || key === '1') {
+        handleToolChange('select');
+      } else if (key === 'h' || key === ' ') {
+        handleToolChange('pan');
+      } else if (key === 'p' || key === 'b') {
+        handleToolChange('brush');
+      } else if (key === 'e') {
+        handleToolChange('eraser');
+      } else if (key === 's' || key === 'n') {
+        handleToolChange('note');
+      } else if (key === 'r') {
+        handleToolChange('shape', { shapeType: 'rectangle' });
+      } else if (key === 'o') {
+        handleToolChange('shape', { shapeType: 'ellipse' });
+      } else if (key === 'd') {
+        handleToolChange('shape', { shapeType: 'diamond' });
+      } else if (key === 't') {
+        handleToolChange('text');
+      } else if (key === 'a') {
+        handleToolChange('arrow');
+      } else if (key === 'f') {
+        handleToolChange('frame');
+      } else if (key === '?') {
+        setIsShortcutsOpen(true);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editor, handleToolChange]);
 
   // Sync editor state with animation frame throttling
   useEffect(() => {

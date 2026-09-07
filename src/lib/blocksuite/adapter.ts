@@ -512,9 +512,55 @@ export function createBlockSuiteAdapter(
     }
   };
 
+  const setTool = (toolName: string, options?: any) => {
+    try {
+      const gfx = getGfx();
+      if (gfx?.tool) {
+        if (toolName === 'select' || toolName === 'default') {
+          gfx.tool.setTool('default');
+        } else if (toolName === 'pan' || toolName === 'hand') {
+          gfx.tool.setTool('pan');
+        } else if (toolName === 'brush' || toolName === 'draw' || toolName === 'pen') {
+          gfx.tool.setTool('brush', options || { strokeWidth: 4 });
+        } else if (toolName === 'eraser') {
+          gfx.tool.setTool('eraser');
+        } else if (toolName === 'shape') {
+          const resolvedType = options?.shapeType ? resolveShapeType(options.shapeType) : 'rect';
+          gfx.tool.setTool('shape', { shapeType: resolvedType, ...options });
+        } else if (toolName === 'note' || toolName === 'sticky') {
+          gfx.tool.setTool('affine:note');
+        } else if (toolName === 'text') {
+          gfx.tool.setTool('text');
+        } else if (toolName === 'connector' || toolName === 'arrow') {
+          gfx.tool.setTool('connector', options || { mode: 1 });
+        } else if (toolName === 'frame') {
+          gfx.tool.setTool('frame');
+        } else {
+          gfx.tool.setTool(toolName, options);
+        }
+      }
+    } catch (err) {
+      console.warn('[ZaxDraw] setTool error:', err);
+    }
+  };
+
+  const getActiveTool = (): string => {
+    try {
+      const gfx = getGfx();
+      const current = gfx?.tool?.currentToolName$?.value || gfx?.tool?.currentToolName;
+      if (current === 'default') return 'select';
+      if (current === 'affine:note') return 'note';
+      return current || 'select';
+    } catch {
+      return 'select';
+    }
+  };
+
   return {
     doc,
     edgelessEditor,
+    setTool,
+    getActiveTool,
     zoomIn,
     zoomOut,
     resetZoom,

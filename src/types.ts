@@ -17,10 +17,23 @@ export interface ShapeCreationProps {
   };
 }
 
+export type CanvasToolType =
+  | 'select'
+  | 'pan'
+  | 'brush'
+  | 'eraser'
+  | 'note'
+  | 'shape'
+  | 'text'
+  | 'arrow'
+  | 'frame';
+
 export interface ZaxDrawEditor {
   isDisposed?: boolean;
   doc: any;
   edgelessEditor: any;
+  setTool?: (toolName: CanvasToolType | string, options?: any) => void;
+  getActiveTool?: () => string;
   zoomIn: () => void;
   zoomOut: () => void;
   resetZoom: () => void;

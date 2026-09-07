@@ -736,10 +736,24 @@ export const Header: React.FC<HeaderProps> = ({
             onChange={handleImportFile}
           />
 
-          {/* PWA Install Button (Desktop) */}
-          <div className="hidden lg:block">
+          {/* PWA Install Button (Desktop & Tablet) */}
+          <div className="hidden sm:block">
             <PWAInstallButton
               variant="header"
+              onInstalled={() => {
+                addToast({
+                  type: 'success',
+                  title: 'App Installed!',
+                  description: 'Zax-draw is running as a standalone app.',
+                });
+              }}
+            />
+          </div>
+
+          {/* Compact Install Icon for very small mobile screens if space permits */}
+          <div className="block sm:hidden">
+            <PWAInstallButton
+              variant="compact"
               onInstalled={() => {
                 addToast({
                   type: 'success',

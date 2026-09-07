@@ -1,7 +1,13 @@
 import { createRoot } from 'react-dom/client';
+import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
 import { AppErrorBoundary } from './components/AppErrorBoundary';
 import './index.css';
+
+// Automatically register and update PWA service worker
+if (typeof window !== 'undefined') {
+  registerSW({ immediate: true });
+}
 
 // Diagnostic logging & Global error listeners
 if (typeof window !== 'undefined') {
