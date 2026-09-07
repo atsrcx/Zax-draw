@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Trash2 } from 'lucide-react';
 import { safeDeleteIndexedDB, safeStorageRemove } from '../utils/storage';
+import { clearDocPersistence } from '../lib/blocksuite/store';
 
 interface Props {
   children: ReactNode;
@@ -41,12 +42,15 @@ export class CanvasErrorBoundary extends Component<Props, State> {
         await this.props.onResetData();
       }
 
-      // Safely clear only tldraw board local persistence
+      // Safely clear Zax-draw board local persistence
+      safeStorageRemove('zaxdraw_board_title');
+      safeStorageRemove('zaxdraw_welcome_shown');
       safeStorageRemove('tldraw_board_title');
       safeStorageRemove('tldraw_welcome_shown');
       safeStorageRemove('tldraw_sdk_main_board');
 
-      // Delete only the tldraw IndexedDB database
+      // Clear BlockSuite IndexedDB persistence
+      await clearDocPersistence();
       await safeDeleteIndexedDB('tldraw_sdk_main_board');
       await safeDeleteIndexedDB('tldraw');
     } catch (e) {

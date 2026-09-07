@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Editor, createShapeId, toRichText } from 'tldraw';
-import 'tldraw/tldraw.css';
+import '@toeverything/theme/style.css';
 import { Maximize2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { CanvasBoard } from './components/CanvasBoard';
@@ -9,15 +8,14 @@ import { ShortcutsModal } from './components/ShortcutsModal';
 import { ClearConfirmModal } from './components/ClearConfirmModal';
 import { Toast } from './components/Toast';
 import { OfflineIndicator } from './components/OfflineIndicator';
-import { DiagnosticOverlay } from './components/DiagnosticOverlay';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
-import { ToastMessage } from './types';
+import { ToastMessage, ZaxDrawEditor } from './types';
 import { safeStorageGet, safeStorageSet } from './utils/storage';
 
 export default function App() {
-  const [editor, setEditor] = useState<Editor | null>(null);
+  const [editor, setEditor] = useState<ZaxDrawEditor | null>(null);
   const [boardTitle, setBoardTitle] = useState(() => {
-    return safeStorageGet('tldraw_board_title', 'Infinite Whiteboard');
+    return safeStorageGet('zaxdraw_board_title', 'Infinite Whiteboard');
   });
 
   const [isZenMode, setIsZenMode] = useState(false);
@@ -29,8 +27,13 @@ export default function App() {
   const [shapeCount, setShapeCount] = useState(0);
   const [selectedCount, setSelectedCount] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isGridMode, setIsGridMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia?.('(prefers-color-scheme: dark)').matches || false;
+    }
+    return false;
+  });
+  const [isGridMode, setIsGridMode] = useState(true);
   const [isSnapMode, setIsSnapMode] = useState(false);
   const isOnline = useOnlineStatus();
 
@@ -38,7 +41,7 @@ export default function App() {
   const onboardingTriggeredRef = useRef(false);
 
   // Stable memoized callback for editor mount
-  const handleMount = useCallback((inst: Editor) => {
+  const handleMount = useCallback((inst: ZaxDrawEditor) => {
     setEditor(inst);
   }, []);
 
@@ -53,7 +56,7 @@ export default function App() {
 
   const handleTitleChange = (newTitle: string) => {
     setBoardTitle(newTitle);
-    safeStorageSet('tldraw_board_title', newTitle);
+    safeStorageSet('zaxdraw_board_title', newTitle);
     addToast({
       title: 'Title Updated',
       description: `Renamed to "${newTitle}"`,
@@ -63,7 +66,7 @@ export default function App() {
 
   // Sync editor state with animation frame throttling
   useEffect(() => {
-    if (!editor || editor.isDisposed) return;
+    if (!editor) return;
 
     let isSubscribed = true;
     let rafId: number | null = null;
@@ -73,16 +76,11 @@ export default function App() {
       if (rafId) return;
       rafId = requestAnimationFrame(() => {
         rafId = null;
-        if (!isSubscribed) return;
+        if (!isSubscribed || !editor) return;
         try {
-          if (!editor || editor.isDisposed) return;
-          const ids = editor.getCurrentPageShapeIds();
-          setShapeCount(ids.size);
-          setSelectedCount(editor.getSelectedShapeIds().length);
+          setShapeCount(editor.getShapesCount());
+          setSelectedCount(editor.getSelectedCount());
           setZoomLevel(editor.getZoomLevel());
-          setIsDarkMode(Boolean(editor.user?.getIsDarkMode?.()));
-          setIsGridMode(Boolean(editor.getInstanceState()?.isGridMode));
-          setIsSnapMode(Boolean(editor.user?.getIsSnapMode?.()));
         } catch {
           // Safe fallback during layout transitions
         }
@@ -92,111 +90,101 @@ export default function App() {
     // Immediate initial sync
     syncState();
 
-    // Listen to changes in store
-    let cleanupStore = () => {};
-    try {
-      cleanupStore = editor.store.listen(syncState);
-    } catch (e) {
-      console.warn('[App] Store listener registration error:', e);
-    }
+    // Periodic check for viewport zoom/selection changes
+    const interval = setInterval(syncState, 800);
+
+    // Listen to Yjs document updates for shape additions/removals
+    const updateHandler = () => {
+      syncState();
+    };
+    editor.doc.spaceDoc.on('update', updateHandler);
 
     // Initial onboarding check: run once only if board is truly uninitialized
     if (!onboardingTriggeredRef.current) {
-      const hasInitialized = safeStorageGet('tldraw_welcome_shown');
+      const hasInitialized = safeStorageGet('zaxdraw_welcome_shown');
       if (!hasInitialized) {
         onboardingTriggeredRef.current = true;
         // Delay slightly so IndexedDB store records can populate if present
         const timer = setTimeout(() => {
-          if (!isSubscribed || !editor || editor.isDisposed) return;
+          if (!isSubscribed || !editor) return;
           try {
-            const currentIds = editor.getCurrentPageShapeIds();
-            if (currentIds.size === 0) {
-              safeStorageSet('tldraw_welcome_shown', 'true');
-              const center = editor.getViewportPageBounds().center;
-              editor.createShapes([
-                {
-                  id: createShapeId(),
-                  type: 'note',
-                  x: Math.round(center.x - 100),
-                  y: Math.round(center.y - 120),
-                  props: {
-                    color: 'yellow',
-                    richText: toRichText('✨ Welcome to Tldraw SDK!\n\n• Pick drawing tools from the bottom bar\n• Insert Flowcharts & Kanban from Templates\n• All work auto-saves persistently'),
-                    size: 'm',
-                  },
-                },
-              ]);
-              editor.zoomToFit({ animation: { duration: 300 } });
+            const currentCount = editor.getShapesCount();
+            if (currentCount === 0) {
+              safeStorageSet('zaxdraw_welcome_shown', 'true');
+              editor.addStickyNote({
+                color: 'yellow',
+                text: '✨ Welcome to Zax-draw!\n\n• Infinite canvas powered by BlockSuite\n• Shapes, connectors & sticky notes\n• All work auto-saves persistently',
+              });
+              editor.zoomToFit();
             } else {
-              safeStorageSet('tldraw_welcome_shown', 'true');
+              safeStorageSet('zaxdraw_welcome_shown', 'true');
             }
           } catch {
             // Safe onboarding fallback
           }
-        }, 300);
+        }, 400);
 
         return () => {
           isSubscribed = false;
+          clearInterval(interval);
           clearTimeout(timer);
           if (rafId) cancelAnimationFrame(rafId);
-          cleanupStore();
+          editor.doc.spaceDoc.off('update', updateHandler);
         };
       }
     }
 
     return () => {
       isSubscribed = false;
+      clearInterval(interval);
       if (rafId) cancelAnimationFrame(rafId);
-      cleanupStore();
+      editor.doc.spaceDoc.off('update', updateHandler);
     };
   }, [editor]);
 
-  // Dark mode class sync on document element
+  // Dark mode class & theme sync on document element
   useEffect(() => {
     if (typeof document === 'undefined') return;
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
   }, [isDarkMode]);
 
   // Canvas actions
   const handleToggleDarkMode = () => {
-    if (!editor || editor.isDisposed) return;
-    const next = !editor.user.getIsDarkMode();
-    editor.user.updateUserPreferences({ colorScheme: next ? 'dark' : 'light' });
-    setIsDarkMode(next);
+    setIsDarkMode((prev) => !prev);
   };
 
   const handleToggleGridMode = () => {
-    if (!editor || editor.isDisposed) return;
-    const next = !editor.getInstanceState()?.isGridMode;
-    editor.updateInstanceState({ isGridMode: next });
-    setIsGridMode(next);
+    setIsGridMode((prev) => !prev);
+    // Grid mode styling toggle on wrapper if desired
   };
 
   const handleToggleSnapMode = () => {
-    if (!editor || editor.isDisposed) return;
-    const next = !editor.user.getIsSnapMode();
-    editor.user.updateUserPreferences({ isSnapMode: next });
-    setIsSnapMode(next);
+    setIsSnapMode((prev) => !prev);
   };
 
   const handleClearCanvas = () => {
-    if (!editor || editor.isDisposed) return;
-    const shapeIds = Array.from(editor.getCurrentPageShapeIds());
-    if (shapeIds.length === 0) return;
-    editor.deleteShapes(shapeIds);
+    if (!editor) return;
+    editor.clearAll();
+    setShapeCount(0);
+    setSelectedCount(0);
     addToast({
       title: 'Canvas Cleared',
-      description: 'All shapes have been removed. Use Cmd+Z to undo.',
+      description: 'All shapes have been removed from the board.',
       type: 'info',
     });
   };
 
   return (
-    <div id="tldraw-app-root" className="relative w-screen h-screen overflow-hidden bg-[#f8f9fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100">
+    <div
+      id="zaxdraw-app-root"
+      className="relative w-screen h-screen overflow-hidden bg-[#f8f9fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100"
+    >
       {/* Top Application Header */}
       <Header
         editor={editor}
@@ -228,9 +216,9 @@ export default function App() {
         </button>
       )}
 
-      {/* Main Tldraw Canvas Container */}
+      {/* Main Canvas Container */}
       <div
-        id="tldraw-canvas-wrapper"
+        id="zaxdraw-canvas-wrapper"
         className={`absolute inset-x-0 ${
           isZenMode ? 'top-0 bottom-0' : 'top-12 bottom-0 sm:bottom-6'
         }`}
@@ -238,7 +226,7 @@ export default function App() {
         <CanvasBoard onMount={handleMount} />
       </div>
 
-      {/* High Density Status Bar (Live connection, shapes, coordinates, zoom, shortcut) */}
+      {/* High Density Status Bar */}
       {!isZenMode ? (
         <footer
           id="app-status-bar"
@@ -267,10 +255,10 @@ export default function App() {
           <div className="flex items-center gap-4">
             <span className="opacity-70 hidden sm:inline">Zoom: {Math.round(zoomLevel * 100)}%</span>
             <span className="opacity-40 hidden sm:inline">•</span>
-            <span className="opacity-70 hidden md:inline">Auto-saved</span>
+            <span className="opacity-70 hidden md:inline">Auto-saved (IndexedDB)</span>
             <span className="opacity-40 hidden lg:inline">•</span>
-            <span className="text-emerald-400 hidden lg:inline">PWA Active</span>
-            <span>Shortcut: V (Select)</span>
+            <span className="text-emerald-400 hidden lg:inline">BlockSuite Engine</span>
+            <span>Shortcut: ⌘Z (Undo)</span>
           </div>
         </footer>
       ) : (
@@ -300,9 +288,6 @@ export default function App() {
 
       {/* Notification Toasts */}
       <Toast toasts={toasts} onDismiss={dismissToast} />
-
-      {/* Temporary Runtime Diagnostics (HUD for mobile diagnosis) */}
-      <DiagnosticOverlay />
     </div>
   );
 }

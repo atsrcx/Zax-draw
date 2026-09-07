@@ -1,127 +1,96 @@
-import React, { memo, useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Tldraw, Editor, createShapeId, toRichText } from 'tldraw';
+import React, { useEffect, useRef, useState, memo } from 'react';
+import '@toeverything/theme/style.css';
+import { EdgelessEditor } from '@blocksuite/presets';
+import { ensureBlockSuiteRegistered } from '../lib/blocksuite/init';
+import { getOrCreateMainDoc, clearDocPersistence } from '../lib/blocksuite/store';
+import { createBlockSuiteAdapter } from '../lib/blocksuite/adapter';
+import { ZaxDrawEditor } from '../types';
 import { CanvasErrorBoundary } from './CanvasErrorBoundary';
-import { safeDeleteIndexedDB } from '../utils/storage';
+import { Loader2 } from 'lucide-react';
+
+// Initialize registrations
+ensureBlockSuiteRegistered();
 
 interface CanvasBoardProps {
-  onMount: (editor: Editor) => void;
+  onMount: (editor: ZaxDrawEditor) => void;
 }
 
 export const CanvasBoard: React.FC<CanvasBoardProps> = memo(({ onMount }) => {
-  const [boardVersion, setBoardVersion] = useState(0);
-  const autoRecoveredRef = useRef(false);
-
-  // tldraw options: prevent font loading from blocking canvas rendering on cold cache / first visit
-  const tldrawOptions = useMemo(
-    () => ({
-      maxFontsToLoadBeforeRender: 0,
-    }),
-    [],
-  );
+  const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<EdgelessEditor | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('[DIAGNOSTIC] CanvasBoard mounted');
-    const win = window as any;
-    win.__TLDRAW_DIAGNOSTICS__ = {
-      ...(win.__TLDRAW_DIAGNOSTICS__ || {}),
-      canvasBoardMounted: true,
-      canvasBoardTime: new Date().toLocaleTimeString(),
-    };
-    window.dispatchEvent(new CustomEvent('tldraw-diagnostic-update'));
-  }, []);
+    let isCancelled = false;
 
-  const handleMount = useCallback(
-    (editor: Editor) => {
-      console.log('[DIAGNOSTIC] Tldraw mounted');
-      const win = window as any;
-      win.__TLDRAW_DIAGNOSTICS__ = {
-        ...(win.__TLDRAW_DIAGNOSTICS__ || {}),
-        tldrawMounted: true,
-        tldrawMountTime: new Date().toLocaleTimeString(),
-        editorId: String(editor.store?.id || 'editor-ready'),
-      };
-
-      // Ensure viewport screen bounds are calculated immediately from the container element
+    async function initEditor() {
       try {
-        const containerEl = document.getElementById('tldraw-board-inner-container');
-        if (containerEl) {
-          editor.updateViewportScreenBounds(containerEl);
+        ensureBlockSuiteRegistered();
+
+        const { doc } = await getOrCreateMainDoc();
+        if (isCancelled || !containerRef.current) return;
+
+        // Clean any existing editor instance
+        if (editorRef.current && editorRef.current.parentElement) {
+          editorRef.current.parentElement.removeChild(editorRef.current);
+          editorRef.current = null;
         }
-      } catch (boundsErr) {
-        console.warn('[DIAGNOSTIC] Viewport bounds update warning:', boundsErr);
+
+        // Use custom element creation
+        const editor = document.createElement('edgeless-editor') as EdgelessEditor;
+        editor.doc = doc;
+        editor.style.width = '100%';
+        editor.style.height = '100%';
+        editor.style.display = 'block';
+        editor.id = 'zax-draw-edgeless-editor';
+
+        containerRef.current.appendChild(editor);
+        editorRef.current = editor;
+
+        const adapter = createBlockSuiteAdapter(doc, editor);
+        onMount(adapter);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('[ZaxDraw] Failed to initialize EdgelessEditor:', err);
+        setIsLoading(false);
       }
-
-      // Add temporary test shape for diagnostic verification (Requirement 6)
-      try {
-        const testShapeId = createShapeId('diag-test-shape');
-        editor.createShapes([
-          {
-            id: testShapeId,
-            type: 'geo',
-            x: 60,
-            y: 60,
-            props: {
-              w: 220,
-              h: 140,
-              geo: 'rectangle',
-              color: 'red',
-              fill: 'solid',
-              richText: toRichText('DIAGNOSTIC TEST SHAPE'),
-            },
-          },
-        ]);
-        editor.zoomToFit({ animation: { duration: 0 } });
-        win.__TLDRAW_DIAGNOSTICS__.testShapeStatus = 'CREATED (Red Geo at 60,60)';
-        console.log('[DIAGNOSTIC] Test shape created successfully');
-      } catch (err: any) {
-        win.__TLDRAW_DIAGNOSTICS__.testShapeStatus = `FAILED: ${err?.message || String(err)}`;
-        console.error('[DIAGNOSTIC] Failed to create test shape:', err);
-      }
-
-      window.dispatchEvent(new CustomEvent('tldraw-diagnostic-update'));
-      onMount(editor);
-
-      // Automated renderer readiness check: if canvas or svg elements failed to initialize, self-heal once
-      const timer = setTimeout(() => {
-        if (autoRecoveredRef.current) return;
-        const svgCount = document.querySelectorAll('.tl-container svg').length;
-        const canvasCount = document.querySelectorAll('canvas').length;
-        if (svgCount === 0 && canvasCount === 0) {
-          console.warn('[DIAGNOSTIC] Canvas elements not found after mount. Triggering single self-healing remount...');
-          autoRecoveredRef.current = true;
-          setBoardVersion((v) => v + 1);
-        }
-      }, 400);
-
-      return () => clearTimeout(timer);
-    },
-    [onMount],
-  );
-
-  const handleResetData = useCallback(async () => {
-    try {
-      await safeDeleteIndexedDB('tldraw_sdk_main_board');
-      await safeDeleteIndexedDB('tldraw');
-    } catch (err) {
-      console.warn('[CanvasBoard] Failed to delete IndexedDB during reset:', err);
     }
-    setBoardVersion((v) => v + 1);
-  }, []);
+
+    initEditor();
+
+    return () => {
+      isCancelled = true;
+      if (editorRef.current && editorRef.current.parentElement) {
+        editorRef.current.parentElement.removeChild(editorRef.current);
+        editorRef.current = null;
+      }
+    };
+  }, [onMount]);
+
+  const handleResetData = async () => {
+    await clearDocPersistence();
+  };
 
   return (
-    <div
-      id="tldraw-board-inner-container"
-      style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}
-    >
-      <CanvasErrorBoundary key={`canvas-boundary-${boardVersion}`} onResetData={handleResetData}>
-        <Tldraw
-          key={`tldraw-instance-${boardVersion}`}
-          onMount={handleMount}
-          options={tldrawOptions}
-          autoFocus={false}
-        />
-      </CanvasErrorBoundary>
-    </div>
+    <CanvasErrorBoundary onResetData={handleResetData}>
+      <div
+        id="zax-draw-canvas-container"
+        ref={containerRef}
+        className="relative w-full h-full overflow-hidden select-none bg-[#f8f9fa] dark:bg-slate-950"
+      >
+        {isLoading && (
+          <div
+            id="canvas-loading-spinner"
+            className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/80 dark:bg-slate-900/80 z-20"
+          >
+            <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin mb-2" />
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+              Initializing Canvas Engine...
+            </span>
+          </div>
+        )}
+      </div>
+    </CanvasErrorBoundary>
   );
 });
 

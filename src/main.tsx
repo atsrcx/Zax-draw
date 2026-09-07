@@ -20,35 +20,6 @@ if (typeof window !== 'undefined') {
     }
     console.error('[DIAGNOSTIC] unhandled rejection:', reason, event.reason);
   });
-
-  // Production-only cleanup to prevent old deployed service workers from controlling the app
-  if (import.meta.env.PROD) {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .getRegistrations()
-        .then((registrations) => {
-          for (const registration of registrations) {
-            registration.unregister().catch(() => {});
-          }
-        })
-        .catch((e) => {
-          console.warn('[DIAGNOSTIC] serviceWorker cleanup error:', e);
-        });
-    }
-
-    if ('caches' in window) {
-      window.caches
-        .keys()
-        .then((keys) => {
-          for (const key of keys) {
-            window.caches.delete(key).catch(() => {});
-          }
-        })
-        .catch((e) => {
-          console.warn('[DIAGNOSTIC] caches cleanup error:', e);
-        });
-    }
-  }
 }
 
 console.log('[DIAGNOSTIC] app boot');

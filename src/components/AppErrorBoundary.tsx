@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Trash2, Home } from 'lucide-react';
+import { clearDocPersistence } from '../lib/blocksuite/store';
 
 interface Props {
   children: ReactNode;
@@ -42,8 +43,10 @@ export class AppErrorBoundary extends Component<Props, State> {
   private handleResetData = async () => {
     try {
       if (typeof window !== 'undefined') {
-        // Clear local storage keys used by tldraw board
+        // Clear local storage keys used by whiteboard
         try {
+          localStorage.removeItem('zaxdraw_board_title');
+          localStorage.removeItem('zaxdraw_welcome_shown');
           localStorage.removeItem('tldraw_board_title');
           localStorage.removeItem('tldraw_welcome_shown');
           localStorage.removeItem('tldraw_sdk_main_board');
@@ -51,7 +54,10 @@ export class AppErrorBoundary extends Component<Props, State> {
           // localStorage access might be restricted in private mode
         }
 
-        // Clear tldraw IndexedDB database safely
+        // Clear BlockSuite persistence safely
+        await clearDocPersistence();
+
+        // Clear legacy tldraw IndexedDB database safely
         if (window.indexedDB) {
           try {
             window.indexedDB.deleteDatabase('tldraw_sdk_main_board');

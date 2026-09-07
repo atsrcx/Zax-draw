@@ -1,12 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Editor,
-  createShapeId,
-  getSnapshot,
-  loadSnapshot,
-  toRichText,
-} from 'tldraw';
-import {
   Sparkles,
   Download,
   Upload,
@@ -45,11 +38,11 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { CANVAS_TEMPLATES } from '../templates/canvasTemplates';
-import { ToastMessage } from '../types';
+import { ToastMessage, ZaxDrawEditor } from '../types';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
-  editor: Editor | null;
+  editor: ZaxDrawEditor | null;
   boardTitle: string;
   onTitleChange: (title: string) => void;
   isZenMode: boolean;
@@ -146,90 +139,46 @@ export const Header: React.FC<HeaderProps> = ({
   // Quick shape additions
   const handleAddSticky = (color: 'yellow' | 'light-blue' | 'light-green' | 'light-violet' | 'light-red') => {
     if (!editor) return;
-    const center = editor.getViewportPageBounds().center;
-    editor.createShape({
-      id: createShapeId(),
-      type: 'note',
-      x: Math.round(center.x - 80),
-      y: Math.round(center.y - 80),
-      props: {
-        color: color as any,
-        richText: toRichText('New Note'),
-        size: 's',
-      },
+    const resolvedColor =
+      color === 'light-blue'
+        ? 'blue'
+        : color === 'light-green'
+        ? 'green'
+        : color === 'light-violet'
+        ? 'purple'
+        : color === 'light-red'
+        ? 'red'
+        : 'yellow';
+    editor.addStickyNote({
+      color: resolvedColor,
+      text: 'New Note',
     });
     setOpenDropdown(null);
   };
 
   const handleAddGeo = (geo: 'rectangle' | 'ellipse' | 'diamond' | 'triangle' | 'star' | 'cloud', color = 'black') => {
     if (!editor) return;
-    const center = editor.getViewportPageBounds().center;
-    editor.createShape({
-      id: createShapeId(),
-      type: 'geo',
-      x: Math.round(center.x - 90),
-      y: Math.round(center.y - 60),
-      props: {
-        geo,
-        w: 180,
-        h: 120,
-        color: color as any,
-        fill: 'semi',
-        richText: toRichText(''),
-      },
+    editor.addShape(geo, {
+      color: color === 'light-blue' ? 'blue' : color,
     });
     setOpenDropdown(null);
   };
 
   const handleAddText = () => {
     if (!editor) return;
-    const center = editor.getViewportPageBounds().center;
-    editor.createShape({
-      id: createShapeId(),
-      type: 'text',
-      x: Math.round(center.x - 70),
-      y: Math.round(center.y - 20),
-      props: {
-        richText: toRichText('Heading Text'),
-        size: 'm',
-        autoSize: true,
-      },
-    });
+    editor.addText('Heading Text');
     setOpenDropdown(null);
   };
 
   const handleAddArrow = () => {
     if (!editor) return;
-    const center = editor.getViewportPageBounds().center;
-    editor.createShape({
-      id: createShapeId(),
-      type: 'arrow',
-      x: Math.round(center.x - 80),
-      y: Math.round(center.y),
-      props: {
-        start: { x: 0, y: 0 },
-        end: { x: 160, y: 0 },
-        richText: toRichText('Connect'),
-        size: 'm',
-      },
-    });
+    editor.addArrow({ color: 'black' });
     setOpenDropdown(null);
   };
 
   const handleAddFrame = () => {
     if (!editor) return;
-    const center = editor.getViewportPageBounds().center;
-    editor.createShape({
-      id: createShapeId(),
-      type: 'frame',
-      x: Math.round(center.x - 200),
-      y: Math.round(center.y - 150),
-      props: {
-        w: 400,
-        h: 300,
-        name: 'Design Frame',
-      },
-    });
+    editor.addFrame('Design Frame');
     setOpenDropdown(null);
   };
 
@@ -238,8 +187,8 @@ export const Header: React.FC<HeaderProps> = ({
     if (!editor) return;
     setOpenDropdown(null);
 
-    const shapeIds = Array.from(editor.getCurrentPageShapeIds());
-    if (shapeIds.length === 0) {
+    const count = editor.getShapesCount();
+    if (count === 0 && format !== 'json') {
       addToast({
         title: 'Canvas is empty',
         description: 'Draw or insert some shapes before exporting.',
@@ -250,43 +199,32 @@ export const Header: React.FC<HeaderProps> = ({
 
     try {
       if (format === 'json') {
-        const snapshot = getSnapshot(editor.store);
-        const jsonStr = JSON.stringify(snapshot, null, 2);
+        const jsonStr = await editor.exportJson();
         const blob = new Blob([jsonStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${boardTitle.toLowerCase().replace(/\s+/g, '-')}-snapshot.tldr`;
+        a.download = `${boardTitle.toLowerCase().replace(/\s+/g, '-')}-backup.json`;
         a.click();
         URL.revokeObjectURL(url);
         addToast({
-          title: 'Snapshot Exported',
-          description: 'Downloaded .tldr snapshot successfully.',
+          title: 'Backup Exported',
+          description: 'Downloaded whiteboard backup JSON successfully.',
           type: 'success',
         });
         return;
       }
 
-      const res = await editor.toImage(shapeIds, {
-        format,
-        background: true,
-        padding: 32,
-        scale: 2,
-      });
-
-      const blob = (res as any)?.blob || res;
-      if (!blob) throw new Error('No blob returned from editor');
-
-      const url = URL.createObjectURL(blob);
+      const { url, filename } = await editor.exportImage(format);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${boardTitle.toLowerCase().replace(/\s+/g, '-')}.${format}`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
 
       addToast({
         title: `Exported as ${format.toUpperCase()}`,
-        description: `Saved high-resolution ${format.toUpperCase()} image.`,
+        description: `Saved ${format.toUpperCase()} file successfully.`,
         type: 'success',
       });
     } catch (err) {
@@ -303,25 +241,8 @@ export const Header: React.FC<HeaderProps> = ({
     if (!editor) return;
     setOpenDropdown(null);
 
-    const shapeIds = Array.from(editor.getCurrentPageShapeIds());
-    if (shapeIds.length === 0) {
-      addToast({
-        title: 'Canvas is empty',
-        description: 'Nothing to copy to clipboard.',
-        type: 'info',
-      });
-      return;
-    }
-
     try {
-      const res = await editor.toImage(shapeIds, {
-        format: 'png',
-        background: true,
-        padding: 24,
-        scale: 2,
-      });
-
-      const blob = (res as any)?.blob || res;
+      const { blob } = await editor.exportImage('png');
       if (navigator.clipboard && window.ClipboardItem) {
         await navigator.clipboard.write([
           new ClipboardItem({ 'image/png': blob }),
@@ -349,22 +270,24 @@ export const Header: React.FC<HeaderProps> = ({
     if (!file || !editor) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const text = event.target?.result as string;
-        const data = JSON.parse(text);
-        loadSnapshot(editor.store, data);
-        editor.zoomToFit({ animation: { duration: 300 } });
-        addToast({
-          title: 'Snapshot Imported',
-          description: `Restored whiteboard from ${file.name}.`,
-          type: 'success',
-        });
+        const success = await editor.importJson(text);
+        if (success) {
+          addToast({
+            title: 'Whiteboard Restored',
+            description: `Imported canvas data from ${file.name}.`,
+            type: 'success',
+          });
+        } else {
+          throw new Error('Invalid format');
+        }
       } catch (err) {
-        console.error('Failed to parse snapshot:', err);
+        console.error('Failed to parse backup:', err);
         addToast({
           title: 'Import Failed',
-          description: 'The selected file is not a valid Tldraw snapshot.',
+          description: 'The selected file is not a valid Zax-draw backup.',
           type: 'error',
         });
       }
@@ -407,7 +330,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex items-center gap-2.5 shrink-0">
             <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-xs">
-              td
+              ZD
             </div>
             <div className="flex flex-col min-w-0">
               {isEditingTitle ? (

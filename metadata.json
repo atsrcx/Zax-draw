@@ -1,6 +1,6 @@
 {
-  "name": "Tldraw Canvas",
-  "description": "An infinite canvas whiteboard powered by the Tldraw SDK with collaborative-grade drawing tools, templates, and export features.",
+  "name": "Zax-draw",
+  "description": "An infinite whiteboard and graphics canvas powered by BlockSuite Edgeless Editor with diagrams, templates, and export tools.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
