@@ -77,14 +77,30 @@ export default function App() {
 
   // Keyboard shortcut listener for active tool selection
   useEffect(() => {
+    function isEditableTarget(e: KeyboardEvent): boolean {
+      const path = e.composedPath ? e.composedPath() : [e.target as EventTarget];
+      for (const item of path) {
+        if (item instanceof HTMLElement) {
+          if (
+            item.tagName === 'INPUT' ||
+            item.tagName === 'TEXTAREA' ||
+            item.isContentEditable ||
+            item.getAttribute('contenteditable') === 'true' ||
+            item.classList.contains('inline-editor') ||
+            item.classList.contains('affine-paragraph') ||
+            Boolean(item.closest?.('[contenteditable="true"]')) ||
+            Boolean(item.closest?.('.inline-editor')) ||
+            Boolean(item.closest?.('rich-text'))
+          ) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
     function handleKeyDown(e: KeyboardEvent) {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable ||
-        target.closest('[contenteditable="true"]')
-      ) {
+      if (isEditableTarget(e)) {
         return;
       }
 
