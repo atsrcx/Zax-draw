@@ -9,6 +9,7 @@ import { ShortcutsModal } from './components/ShortcutsModal';
 import { ClearConfirmModal } from './components/ClearConfirmModal';
 import { Toast } from './components/Toast';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { DiagnosticOverlay } from './components/DiagnosticOverlay';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { ToastMessage } from './types';
 import { safeStorageGet, safeStorageSet } from './utils/storage';
@@ -299,6 +300,9 @@ export default function App() {
 
       {/* Notification Toasts */}
       <Toast toasts={toasts} onDismiss={dismissToast} />
+
+      {/* Temporary Runtime Diagnostics (HUD for mobile diagnosis) */}
+      <DiagnosticOverlay />
     </div>
   );
 }
