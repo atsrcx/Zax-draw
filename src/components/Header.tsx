@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { CANVAS_TEMPLATES } from '../templates/canvasTemplates';
 import { ToastMessage } from '../types';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
   editor: Editor | null;
@@ -796,6 +797,21 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="text-[10px] text-slate-400">Restore from .tldr or JSON</div>
                   </div>
                 </button>
+
+                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+                {/* PWA Install Entry in Menu */}
+                <PWAInstallButton
+                  variant="dropdown"
+                  onInstalled={() => {
+                    setOpenDropdown(null);
+                    addToast({
+                      type: 'success',
+                      title: 'App Installed!',
+                      description: 'Tldraw Canvas is now running as a standalone desktop/mobile app.',
+                    });
+                  }}
+                />
               </div>
             )}
           </div>
@@ -807,6 +823,18 @@ export const Header: React.FC<HeaderProps> = ({
             accept=".json,.tldr"
             className="hidden"
             onChange={handleImportFile}
+          />
+
+          {/* PWA Install Button in Header */}
+          <PWAInstallButton
+            variant="header"
+            onInstalled={() => {
+              addToast({
+                type: 'success',
+                title: 'App Installed!',
+                description: 'Tldraw Canvas is now running as a standalone app.',
+              });
+            }}
           />
 
           {/* Clear Canvas */}

@@ -7,6 +7,8 @@ import { CanvasStats } from './components/CanvasStats';
 import { ShortcutsModal } from './components/ShortcutsModal';
 import { ClearConfirmModal } from './components/ClearConfirmModal';
 import { Toast } from './components/Toast';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { ToastMessage } from './types';
 
 export default function App() {
@@ -27,6 +29,7 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isGridMode, setIsGridMode] = useState(false);
   const [isSnapMode, setIsSnapMode] = useState(false);
+  const isOnline = useOnlineStatus();
 
   const addToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
     const id = Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
@@ -198,11 +201,18 @@ export default function App() {
           className="fixed bottom-0 left-0 right-0 h-6 bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-300 border-t border-slate-700 dark:border-slate-800 flex items-center px-3 justify-between text-[10px] font-mono select-none z-30 tracking-tight"
         >
           <div className="flex items-center gap-3">
-            <span className="opacity-70">Connected</span>
-            <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              Live
-            </span>
+            <span className="opacity-70">Status:</span>
+            {isOnline ? (
+              <span className="flex items-center gap-1 text-emerald-400">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                Live (Connected)
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-amber-400 font-semibold">
+                <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                Offline (Cached)
+              </span>
+            )}
             <span className="opacity-40 hidden sm:inline">•</span>
             <span className="opacity-80 hidden sm:inline">Shapes: {shapeCount}</span>
             {selectedCount > 0 && (
@@ -214,6 +224,8 @@ export default function App() {
             <span className="opacity-70 hidden sm:inline">Zoom: {Math.round(zoomLevel * 100)}%</span>
             <span className="opacity-40 hidden sm:inline">•</span>
             <span className="opacity-70 hidden md:inline">Auto-saved</span>
+            <span className="opacity-40 hidden lg:inline">•</span>
+            <span className="text-emerald-400 hidden lg:inline">PWA Active</span>
             <span>Shortcut: V (Select)</span>
           </div>
         </footer>
@@ -224,6 +236,9 @@ export default function App() {
           zoomLevel={zoomLevel}
         />
       )}
+
+      {/* Offline Mode Indicator */}
+      <OfflineIndicator />
 
       {/* Keyboard Shortcuts Modal */}
       <ShortcutsModal
