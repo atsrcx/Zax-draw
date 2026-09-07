@@ -206,8 +206,7 @@ This project is configured as a fully compliant **Progressive Web App**:
 
 1. Link your repository in [Netlify](https://www.netlify.com/).
 2. Set Build Command to `npm run build` and Publish Directory to `dist`.
-3. Add a `_redirects` file in `public/` containing `/* /index.html 200` for single-page routing if needed.
-4. Click **Deploy Site**.
+3. Click **Deploy Site**.
 
 ### Deploy with Docker / Cloud Run
 
