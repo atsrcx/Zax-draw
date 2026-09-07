@@ -27,7 +27,7 @@ export class CanvasErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const timestamp = new Date().toISOString();
-    console.error(`[CanvasErrorBoundary ${timestamp}] Caught tldraw canvas error:`, error, errorInfo);
+    console.error(`[DIAGNOSTIC] CanvasErrorBoundary (${timestamp}):`, error, errorInfo);
   }
 
   private handleReload = () => {

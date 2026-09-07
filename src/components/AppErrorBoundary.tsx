@@ -30,7 +30,7 @@ export class AppErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const timestamp = new Date().toISOString();
-    console.error(`[AppErrorBoundary ${timestamp}] Runtime failure caught:`, error, errorInfo);
+    console.error(`[DIAGNOSTIC] AppErrorBoundary (${timestamp}):`, error, errorInfo);
   }
 
   private handleReload = () => {
